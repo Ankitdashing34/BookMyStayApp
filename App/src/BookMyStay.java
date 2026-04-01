@@ -1,56 +1,110 @@
-public class BookMyStay {
-        // Abstract base class
+ import java.util.HashMap;
+import java.util.Map;
+
+    public class BookMyStay {
+
+        // Abstract Room class
         static abstract class Room {
             protected String roomType;
             protected double price;
-            protected int availableRooms;
 
-            public Room(String roomType, double price, int availableRooms) {
+            public Room(String roomType, double price) {
                 this.roomType = roomType;
                 this.price = price;
-                this.availableRooms = availableRooms;
             }
 
-            public abstract void displayDetails();
+            public String getRoomType() {
+                return roomType;
+            }
+
+            public abstract void displayDetails(int availableRooms);
         }
 
-        // Standard Room class
+        // Standard Room
         static class StandardRoom extends Room {
-
-            public StandardRoom(int availableRooms) {
-                super("Standard Room", 1000.0, availableRooms);
+            public StandardRoom() {
+                super("Standard Room", 1000.0);
             }
 
             @Override
-            public void displayDetails() {
+            public void displayDetails(int availableRooms) {
                 System.out.println(roomType + " | Price: ₹" + price + " | Available: " + availableRooms);
             }
         }
 
-        // Deluxe Room class
+        // Deluxe Room
         static class DeluxeRoom extends Room {
-
-            public DeluxeRoom(int availableRooms) {
-                super("Deluxe Room", 2000.0, availableRooms);
+            public DeluxeRoom() {
+                super("Deluxe Room", 2000.0);
             }
 
             @Override
-            public void displayDetails() {
+            public void displayDetails(int availableRooms) {
                 System.out.println(roomType + " | Price: ₹" + price + " | Available: " + availableRooms);
             }
         }
 
-        // Main method (entry point)
+        // RoomInventory using HashMap
+        static class RoomInventory {
+
+            private Map<String, Integer> inventory = new HashMap<>();
+
+            // Register room type with count
+            public void addRoom(String roomType, int count) {
+                inventory.put(roomType, count);
+            }
+
+            // Get availability
+            public int getAvailability(String roomType) {
+                return inventory.getOrDefault(roomType, 0);
+            }
+
+            // Update availability (e.g., booking)
+            public void updateAvailability(String roomType, int change) {
+                int current = getAvailability(roomType);
+                inventory.put(roomType, current + change);
+            }
+
+            // Display all inventory
+            public void displayInventory(Map<String, Room> roomMap) {
+                System.out.println("\nCurrent Room Inventory:\n");
+                for (String type : inventory.keySet()) {
+                    Room room = roomMap.get(type);
+                    int available = inventory.get(type);
+                    room.displayDetails(available);
+                }
+            }
+        }
+
+        // Main method
         public static void main(String[] args) {
 
-            System.out.println("Welcome to Hotel Booking App v1.0\n");
+            System.out.println("Welcome to Hotel Booking App v2.0\n");
 
-            // Create room objects
-            StandardRoom standard = new StandardRoom(5);
-            DeluxeRoom deluxe = new DeluxeRoom(3);
+            // Step 1: Initialize inventory
+            RoomInventory inventory = new RoomInventory();
 
-            // Display details
-            standard.displayDetails();
-            deluxe.displayDetails();
+            // Step 2: Create room objects
+            Room standard = new StandardRoom();
+            Room deluxe = new DeluxeRoom();
+
+            // Map to link room type → Room object
+            Map<String, Room> roomMap = new HashMap<>();
+            roomMap.put(standard.getRoomType(), standard);
+            roomMap.put(deluxe.getRoomType(), deluxe);
+
+            // Step 3: Register room availability
+            inventory.addRoom("Standard Room", 5);
+            inventory.addRoom("Deluxe Room", 3);
+
+            // Step 4: Display inventory
+            inventory.displayInventory(roomMap);
+
+            // Step 5: Update availability (simulate booking)
+            System.out.println("\nBooking 1 Standard Room...\n");
+            inventory.updateAvailability("Standard Room", -1);
+
+            // Step 6: Display updated inventory
+            inventory.displayInventory(roomMap);
         }
     }
