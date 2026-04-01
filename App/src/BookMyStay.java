@@ -1,129 +1,88 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class BookMyStay {
 
-    // Abstract Room class
-    static abstract class Room {
-        protected String roomType;
-        protected double price;
+    // Reservation (Guest booking intent)
+    static class Reservation {
+        private String guestName;
+        private String roomType;
 
-        public Room(String roomType, double price) {
+        public Reservation(String guestName, String roomType) {
+            this.guestName = guestName;
             this.roomType = roomType;
-            this.price = price;
+        }
+
+        public String getGuestName() {
+            return guestName;
         }
 
         public String getRoomType() {
             return roomType;
         }
 
-        public double getPrice() {
-            return price;
-        }
-
-        public abstract void displayDetails(int availableRooms);
-    }
-
-    // Standard Room
-    static class StandardRoom extends Room {
-        public StandardRoom() {
-            super("Standard Room", 1000.0);
-        }
-
-        @Override
-        public void displayDetails(int availableRooms) {
-            System.out.println(roomType + " | Price: ₹" + price + " | Available: " + availableRooms);
+        public void display() {
+            System.out.println("Guest: " + guestName + " | Requested: " + roomType);
         }
     }
 
-    // Deluxe Room
-    static class DeluxeRoom extends Room {
-        public DeluxeRoom() {
-            super("Deluxe Room", 2000.0);
+    // Booking Request Queue (FIFO)
+    static class BookingQueue {
+
+        private Queue<Reservation> queue = new LinkedList<>();
+
+        // Add request to queue
+        public void addRequest(Reservation reservation) {
+            queue.offer(reservation);
+            System.out.println("Request added for " + reservation.getGuestName());
         }
 
-        @Override
-        public void displayDetails(int availableRooms) {
-            System.out.println(roomType + " | Price: ₹" + price + " | Available: " + availableRooms);
-        }
-    }
+        // View all queued requests (without removing)
+        public void viewQueue() {
+            System.out.println("\nCurrent Booking Queue:\n");
 
-    // Centralized Inventory (no direct modification outside)
-    static class RoomInventory {
-
-        private Map<String, Integer> inventory = new HashMap<>();
-
-        public void addRoom(String roomType, int count) {
-            inventory.put(roomType, count);
-        }
-
-        // Read-only access
-        public int getAvailability(String roomType) {
-            return inventory.getOrDefault(roomType, 0);
-        }
-
-        // Internal update (not used by Guest/Search)
-        public void updateAvailability(String roomType, int change) {
-            int current = getAvailability(roomType);
-            inventory.put(roomType, current + change);
-        }
-
-        // Expose full map (read-only usage expected)
-        public Map<String, Integer> getAllInventory() {
-            return inventory;
-        }
-    }
-
-    // Search Service (READ-ONLY)
-    static class SearchService {
-
-        private RoomInventory inventory;
-        private Map<String, Room> roomMap;
-
-        public SearchService(RoomInventory inventory, Map<String, Room> roomMap) {
-            this.inventory = inventory;
-            this.roomMap = roomMap;
-        }
-
-        // Guest search (no modification allowed)
-        public void searchAvailableRooms() {
-            System.out.println("\nAvailable Rooms:\n");
-
-            for (String type : inventory.getAllInventory().keySet()) {
-
-                int available = inventory.getAvailability(type);
-
-                // Filter unavailable rooms
-                if (available > 0) {
-                    Room room = roomMap.get(type);
-                    room.displayDetails(available);
-                }
+            if (queue.isEmpty()) {
+                System.out.println("No pending requests.");
+                return;
             }
+
+            for (Reservation r : queue) {
+                r.display();
+            }
+        }
+
+        // Process next request (FIFO)
+        public Reservation getNextRequest() {
+            return queue.poll(); // removes from front
         }
     }
 
     // Main method
     public static void main(String[] args) {
 
-        System.out.println("Welcome to Hotel Booking App v3.0\n");
+        System.out.println("Welcome to Hotel Booking App v4.0\n");
 
-        // Initialize inventory
-        RoomInventory inventory = new RoomInventory();
-        inventory.addRoom("Standard Room", 5);
-        inventory.addRoom("Deluxe Room", 0); // Unavailable example
+        // Initialize booking queue
+        BookingQueue bookingQueue = new BookingQueue();
 
-        // Create room objects
-        Room standard = new StandardRoom();
-        Room deluxe = new DeluxeRoom();
+        // Guests submit booking requests
+        bookingQueue.addRequest(new Reservation("Alice", "Standard Room"));
+        bookingQueue.addRequest(new Reservation("Bob", "Deluxe Room"));
+        bookingQueue.addRequest(new Reservation("Charlie", "Standard Room"));
 
-        Map<String, Room> roomMap = new HashMap<>();
-        roomMap.put(standard.getRoomType(), standard);
-        roomMap.put(deluxe.getRoomType(), deluxe);
+        // View queue (arrival order preserved)
+        bookingQueue.viewQueue();
 
-        // Guest uses Search Service
-        SearchService searchService = new SearchService(inventory, roomMap);
+        // Simulate processing next request (no inventory change yet)
+        System.out.println("\nProcessing next request...\n");
+        Reservation next = bookingQueue.getNextRequest();
 
-        // Perform search (READ-ONLY)
-        searchService.searchAvailableRooms();
+        if (next != null) {
+            System.out.println("Processing:");
+            next.display();
+        }
+
+        // View remaining queue
+        bookingQueue.viewQueue();
     }
 }
